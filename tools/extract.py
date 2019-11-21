@@ -68,8 +68,10 @@ def lookup_fn(headers, fname):
         # done
         break
 
-    proto = proto.replace("* ", "*")
-    proto = proto.replace(" (", "(")
+    proto = proto.replace(" (", "(").replace("( ", "(")
+    proto = proto.replace(" )", ")").replace(" ;", ";")
+    proto = proto.replace("* ", "*").replace("*", " *").replace("  *", " *")
+    proto = proto.replace("( *", "(*").replace("* *", "**")
     proto = ' '.join(proto.strip().split())
     return proto
 

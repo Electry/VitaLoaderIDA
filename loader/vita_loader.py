@@ -34,13 +34,13 @@ class Phdr:
     PT_LOAD = 1
 
     def __init__(self, data):
-        self.p_type =   u32(data, 0)
+        self.p_type   = u32(data, 0)
         self.p_offset = u32(data, 0x4)
-        self.p_vaddr =  u32(data, 0x8)
-        self.p_paddr =  u32(data, 0xC)
+        self.p_vaddr  = u32(data, 0x8)
+        self.p_paddr  = u32(data, 0xC)
         self.p_filesz = u32(data, 0x10)
-        self.p_memsz =  u32(data, 0x14)
-        self.p_flags =  u32(data, 0x18)
+        self.p_memsz  = u32(data, 0x14)
+        self.p_flags  = u32(data, 0x18)
         self.x = bool(self.p_flags & 1)
 
 class SceModuleInfo:
@@ -52,7 +52,7 @@ class SceModuleInfo:
         self.export_end = u32(data, 0x28)
         self.import_top = u32(data, 0x2C)
         self.import_end = u32(data, 0x30)
-        self.nid = u32(data, 0x34)
+        self.nid        = u32(data, 0x34)
     
     @staticmethod
     def _find_or_create_struct():
@@ -63,24 +63,24 @@ class SceModuleInfo:
  
         sid = idc.AddStrucEx(-1, name, 0)
         idc.AddStrucMember(sid, "modattribute", -1, idc.FF_WORD, -1, 2)
-        idc.AddStrucMember(sid, "modversion", -1, idc.FF_WORD, -1, 2)
-        idc.AddStrucMember(sid, "modname", -1, idc.FF_ASCI, -1, 27)
-        idc.AddStrucMember(sid, "type", -1, idc.FF_BYTE, -1, 1)
-        idc.AddStrucMember(sid, "gp_value", -1, idc.FF_DWRD, -1, 4)
-        idc.AddStrucMember(sid, "ent_top", -1, idc.FF_DWRD, -1, 4)
-        idc.AddStrucMember(sid, "ent_end", -1, idc.FF_DWRD, -1, 4)
-        idc.AddStrucMember(sid, "stub_top", -1, idc.FF_DWRD, -1, 4)
-        idc.AddStrucMember(sid, "stub_end", -1, idc.FF_DWRD, -1, 4)
-        idc.AddStrucMember(sid, "module_nid", -1, idc.FF_DWRD, -1, 4)
-        idc.AddStrucMember(sid, "field_38", -1, idc.FF_DWRD, -1, 4)
-        idc.AddStrucMember(sid, "field_3C", -1, idc.FF_DWRD, -1, 4)
-        idc.AddStrucMember(sid, "field_40", -1, idc.FF_DWRD, -1, 4)
-        idc.AddStrucMember(sid, "mod_start", -1, idc.FF_DWRD, -1, 4)
-        idc.AddStrucMember(sid, "mod_stop", -1, idc.FF_DWRD, -1, 4)
-        idc.AddStrucMember(sid, "exidx_start", -1, idc.FF_DWRD, -1, 4)
-        idc.AddStrucMember(sid, "exidx_end", -1, idc.FF_DWRD, -1, 4)
-        idc.AddStrucMember(sid, "extab_start", -1, idc.FF_DWRD, -1, 4)
-        idc.AddStrucMember(sid, "extab_end", -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "modversion",   -1, idc.FF_WORD, -1, 2)
+        idc.AddStrucMember(sid, "modname",      -1, idc.FF_ASCI, -1, 27)
+        idc.AddStrucMember(sid, "type",         -1, idc.FF_BYTE, -1, 1)
+        idc.AddStrucMember(sid, "gp_value",     -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "ent_top",      -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "ent_end",      -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "stub_top",     -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "stub_end",     -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "module_nid",   -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "field_38",     -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "field_3C",     -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "field_40",     -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "mod_start",    -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "mod_stop",     -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "exidx_start",  -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "exidx_end",    -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "extab_start",  -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "extab_end",    -1, idc.FF_DWRD, -1, 4)
 
         idc.Til2Idb(-1, name)
         return sid
@@ -106,17 +106,17 @@ class SceModuleExports:
             return sid # already exists
  
         sid = idc.AddStrucEx(-1, name, 0)
-        idc.AddStrucMember(sid, "size", -1, idc.FF_WORD | idc.FF_DATA, -1, 2)
-        idc.AddStrucMember(sid, "lib_version", -1, idc.FF_BYTE | idc.FF_DATA, -1, 2)
-        idc.AddStrucMember(sid, "attribute", -1, idc.FF_WORD | idc.FF_DATA, -1, 2)
-        idc.AddStrucMember(sid, "num_functions", -1, idc.FF_WORD | idc.FF_DATA, -1, 2)
-        idc.AddStrucMember(sid, "num_vars", -1, idc.FF_WORD | idc.FF_DATA, -1, 2)
-        idc.AddStrucMember(sid, "unk", -1, idc.FF_WORD | idc.FF_DATA, -1, 2)
-        idc.AddStrucMember(sid, "num_tls_vars", -1, idc.FF_DWRD | idc.FF_DATA, -1, 4)
-        idc.AddStrucMember(sid, "lib_nid", -1, idc.FF_DWRD | idc.FF_DATA, -1, 4)
-        idc.AddStrucMember(sid, "lib_name", -1, idc.FF_DWRD | idc.FF_DATA, -1, 4)
-        idc.AddStrucMember(sid, "nid_table", -1, idc.FF_DWRD | idc.FF_DATA, -1, 4)
-        idc.AddStrucMember(sid, "entry_table", -1, idc.FF_DWRD | idc.FF_DATA, -1, 4)
+        idc.AddStrucMember(sid, "size",          -1, idc.FF_WORD, -1, 2)
+        idc.AddStrucMember(sid, "lib_version",   -1, idc.FF_BYTE, -1, 2)
+        idc.AddStrucMember(sid, "attribute",     -1, idc.FF_WORD, -1, 2)
+        idc.AddStrucMember(sid, "num_functions", -1, idc.FF_WORD, -1, 2)
+        idc.AddStrucMember(sid, "num_vars",      -1, idc.FF_WORD, -1, 2)
+        idc.AddStrucMember(sid, "unk",           -1, idc.FF_WORD, -1, 2)
+        idc.AddStrucMember(sid, "num_tls_vars",  -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "lib_nid",       -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "lib_name",      -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "nid_table",     -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "entry_table",   -1, idc.FF_DWRD, -1, 4)
 
         idc.Til2Idb(-1, name)
         return sid
@@ -142,22 +142,22 @@ class SceModuleImports:
             return sid # already exists
  
         sid = idc.AddStrucEx(-1, name, 0)
-        idc.AddStrucMember(sid, "size", -1, idc.FF_WORD | idc.FF_DATA, -1, 2)
-        idc.AddStrucMember(sid, "version", -1, idc.FF_WORD | idc.FF_DATA, -1, 2)
-        idc.AddStrucMember(sid, "flags", -1, idc.FF_WORD | idc.FF_DATA, -1, 2)
-        idc.AddStrucMember(sid, "num_functions", -1, idc.FF_WORD | idc.FF_DATA, -1, 2)
-        idc.AddStrucMember(sid, "num_vars", -1, idc.FF_WORD | idc.FF_DATA, -1, 2)
-        idc.AddStrucMember(sid, "num_tls_vars", -1, idc.FF_WORD | idc.FF_DATA, -1, 2)
-        idc.AddStrucMember(sid, "reserved1", -1, idc.FF_DWRD | idc.FF_DATA, -1, 4)
-        idc.AddStrucMember(sid, "lib_nid", -1, idc.FF_DWRD | idc.FF_DATA, -1, 4)
-        idc.AddStrucMember(sid, "lib_name", -1, idc.FF_DWRD | idc.FF_DATA, -1, 4)
-        idc.AddStrucMember(sid, "reserved2", -1, idc.FF_DWRD | idc.FF_DATA, -1, 4)
-        idc.AddStrucMember(sid, "func_nid_table", -1, idc.FF_DWRD | idc.FF_DATA, -1, 4)
-        idc.AddStrucMember(sid, "func_entry_table", -1, idc.FF_DWRD | idc.FF_DATA, -1, 4)
-        idc.AddStrucMember(sid, "var_nid_table", -1, idc.FF_DWRD | idc.FF_DATA, -1, 4)
-        idc.AddStrucMember(sid, "var_entry_table", -1, idc.FF_DWRD | idc.FF_DATA, -1, 4)
-        idc.AddStrucMember(sid, "tls_nid_table", -1, idc.FF_DWRD | idc.FF_DATA, -1, 4)
-        idc.AddStrucMember(sid, "tls_entry_table", -1, idc.FF_DWRD | idc.FF_DATA, -1, 4)
+        idc.AddStrucMember(sid, "size",             -1, idc.FF_WORD, -1, 2)
+        idc.AddStrucMember(sid, "version",          -1, idc.FF_WORD, -1, 2)
+        idc.AddStrucMember(sid, "flags",            -1, idc.FF_WORD, -1, 2)
+        idc.AddStrucMember(sid, "num_functions",    -1, idc.FF_WORD, -1, 2)
+        idc.AddStrucMember(sid, "num_vars",         -1, idc.FF_WORD, -1, 2)
+        idc.AddStrucMember(sid, "num_tls_vars",     -1, idc.FF_WORD, -1, 2)
+        idc.AddStrucMember(sid, "reserved1",        -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "lib_nid",          -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "lib_name",         -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "reserved2",        -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "func_nid_table",   -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "func_entry_table", -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "var_nid_table",    -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "var_entry_table",  -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "tls_nid_table",    -1, idc.FF_DWRD, -1, 4)
+        idc.AddStrucMember(sid, "tls_entry_table",  -1, idc.FF_DWRD, -1, 4)
 
         idc.Til2Idb(-1, name)
         return sid
@@ -334,6 +334,8 @@ class VitaElf:
             if pos == -1:
                 continue                
             if p[pos - 1] != ' ' and p[pos - 1] != '*':
+                continue
+            if p[pos + len(name)] != ' ' and p[pos + len(name)] != '(':
                 continue
 
             idc.SetType(func, p)
