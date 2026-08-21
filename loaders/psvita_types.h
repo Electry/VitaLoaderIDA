@@ -1,3 +1,4 @@
+// Generated on: 2026-08-21T13:44:06.079190+02:00
 typedef int ptrdiff_t;
 typedef unsigned int size_t;
 typedef unsigned int wchar_t;

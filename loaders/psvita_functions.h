@@ -1,3 +1,4 @@
+// Generated on: 2026-08-21T13:44:06.079190+02:00
 int module_start(SceSize arglen, const void *argp);
 int module_stop(SceSize arglen, const void *argp);
 int module_exit(SceSize arglen, const void *argp);

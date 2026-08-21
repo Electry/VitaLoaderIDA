@@ -1,17 +1,20 @@
+from datetime import datetime
 from pathlib import Path
+import os
+import re
 import subprocess
 import tempfile
-import os
 import yaml
-import re
 
 VITASDK_DIR = "/usr/local/vitasdk"
-OUT_FNS_FILE = "psvita_functions.h"
-OUT_TYPES_FILE = "psvita_types.h"
-OUT_DB_YML_FILE = "psvita_db.yml"
 
-INCLUDE_DIR = os.path.join(VITASDK_DIR, "arm-vita-eabi/include")
-DB_YML_DIR = os.path.join(VITASDK_DIR, "share/vita-headers/db/360")
+OUT_DIR         = os.path.join(os.path.dirname(__file__), "../loaders/")
+OUT_FNS_FILE    = os.path.abspath(os.path.join(OUT_DIR, "psvita_functions.h"))
+OUT_TYPES_FILE  = os.path.abspath(os.path.join(OUT_DIR, "psvita_types.h"))
+OUT_DB_YML_FILE = os.path.abspath(os.path.join(OUT_DIR, "psvita_db.yml"))
+
+INCLUDE_DIR = os.path.abspath(os.path.join(VITASDK_DIR, "arm-vita-eabi/include"))
+DB_YML_DIR  = os.path.abspath(os.path.join(VITASDK_DIR, "share/vita-headers/db/360"))
 
 WRAPPER_HEADER = r"""
 #define __attribute__(x)
@@ -92,7 +95,7 @@ def run_preprocessor():
 
     return result.stdout.decode("utf-8", errors="replace")
 
-def process_db_yml():
+def process_db_yml(run_datetime):
     class HexInt(int): pass
     class FwFloat(float): pass
     class DbYamlDumper(yaml.SafeDumper): pass
@@ -138,6 +141,7 @@ def process_db_yml():
     }
 
     with open(OUT_DB_YML_FILE, "w") as f:
+        f.write(f"# Generated on: {run_datetime.isoformat()}\n")
         yaml.dump(db, f, Dumper=DbYamlDumper, sort_keys=False)
 
     return db
@@ -246,7 +250,7 @@ def split_declarations(headers):
 
     return decls
 
-def extract_proto(headers, db):
+def extract_proto(headers, db, run_datetime):
     decls = split_declarations(headers)
     fn_index = {}
 
@@ -268,6 +272,7 @@ def extract_proto(headers, db):
     seen = set()
 
     with open(OUT_FNS_FILE, "w", encoding="utf-8") as out_file:
+        out_file.write(f"// Generated on: {run_datetime.isoformat()}\n")
         out_file.write(EXTRA_FN_PROTOS.strip())
         out_file.write("\n")
 
@@ -298,11 +303,13 @@ def keep_type_decl(decl):
 
     return False
 
-def extract_types(headers):
+def extract_types(headers, run_datetime):
     decls = split_declarations(headers)
     seen = set()
 
     with open(OUT_TYPES_FILE, "w", encoding="utf-8") as out_file:
+        out_file.write(f"// Generated on: {run_datetime.isoformat()}\n")
+
         prev_norm_multiline = False
 
         for decl in decls:
@@ -323,6 +330,8 @@ def extract_types(headers):
             prev_norm_multiline = curr_norm_multiline
 
 def go():
+    run_datetime = datetime.now().astimezone()
+
     print(f"1) Preprocessing headers from {INCLUDE_DIR}")
     headers = run_preprocessor()
     if headers is None:
@@ -332,16 +341,16 @@ def go():
     headers = sanitize_headers(headers)
 
     print(f"3) Processing DB YML from {DB_YML_DIR}")
-    db = process_db_yml()
+    db = process_db_yml(run_datetime)
     print(f"   Saved to {OUT_DB_YML_FILE}")
 
     print("4) Looking up function prototypes")
-    found, total = extract_proto(headers, db)
+    found, total = extract_proto(headers, db, run_datetime)
     print(f"   Found {found} prototypes out of {total}")
     print(f"   Saved to {OUT_FNS_FILE}")
 
     print("5) Extracting types")
-    extract_types(headers)
+    extract_types(headers, run_datetime)
     print(f"   Saved to {OUT_TYPES_FILE}")
 
 if __name__ == "__main__":
