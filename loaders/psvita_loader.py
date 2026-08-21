@@ -1,4 +1,3 @@
-import math
 import os
 import struct
 from collections import defaultdict
@@ -12,9 +11,7 @@ import ida_loader
 import ida_nalt
 import ida_segment
 import ida_typeinf
-import ida_ua
 import idaapi
-import idautils
 import idc
 
 LOADERS_DIR = os.path.join(idc.idadir(), "loaders/")
@@ -205,110 +202,8 @@ def make_func(func, name=None):
 def apply_struct(ea, size, tid):
     return ida_bytes.create_struct(ea, size, tid)
 
-def annotate_movw_movt_pairs():
-    SEARCH_INSNS = 10
-
-    def decode(ea):
-        insn = ida_ua.insn_t()
-        return insn if ida_ua.decode_insn(insn, ea) else None
-
-    def is_insn_mnem(insn, mnem):
-        return (idc.print_insn_mnem(insn.ea) or "").lower() == mnem
-
-    def get_reg_imm16(insn):
-        if insn.ops[0].type != ida_ua.o_reg or insn.ops[1].type != ida_ua.o_imm:
-            return None, None
-        return insn.ops[0].reg, insn.ops[1].value & 0xFFFF
-
-    def as_i32(u32):
-        u32 &= 0xFFFFFFFF
-        return u32 if u32 < 0x80000000 else u32 - 0x100000000
-
-    def as_float(u32):
-        try:
-            f = struct.unpack("<f", struct.pack("<I", u32 & 0xFFFFFFFF))[0]
-            if math.isnan(f) or math.isinf(f):
-                return None
-            return repr(f)
-        except Exception:
-            return None
-
-    def find_next(start_ea, reg, func_end):
-        cur = start_ea
-        seen = 0
-        while seen < SEARCH_INSNS:
-            cur = idc.next_head(cur, func_end)
-            if cur == idc.BADADDR or cur >= func_end:
-                return None
-            if not ida_bytes.is_code(ida_bytes.get_flags(cur)):
-                continue
-            insn = decode(cur)
-            if not insn:
-                continue
-            if is_insn_mnem(insn, "movw") or is_insn_mnem(insn, "movt"):
-                r2, imm2 = get_reg_imm16(insn)
-                if r2 == reg:
-                    return cur, insn, imm2
-            seen += 1
-        return None
-
-    processed = 0
-
-    for fva in idautils.Functions():
-        fn = ida_funcs.get_func(fva)
-        if not fn:
-            continue
-
-        ea = fn.start_ea
-        while ea != idc.BADADDR and ea < fn.end_ea:
-            if ida_bytes.is_code(ida_bytes.get_flags(ea)):
-                insn = decode(ea)
-                if insn and (is_insn_mnem(insn, "movw") or is_insn_mnem(insn, "movt")):
-                    reg, imm = get_reg_imm16(insn)
-                    if reg is not None:
-                        next = find_next(ea, reg, fn.end_ea)
-                        if next:
-                            ea2, insn2, imm2 = next
-
-                            if is_insn_mnem(insn, "movw") and is_insn_mnem(insn2, "movt"):
-                                full_imm = (imm2 << 16) | imm
-                            elif is_insn_mnem(insn, "movt") and is_insn_mnem(insn2, "movw"):
-                                full_imm = (imm << 16) | imm2
-                            else:
-                                ea = idc.next_head(ea, fn.end_ea)
-                                continue
-
-                            seg = ida_segment.getseg(full_imm)
-                            if not seg or not (seg.start_ea <= full_imm < seg.end_ea):
-                                cmt = f"0x{full_imm:08X} | int32: {as_i32(full_imm)}"
-                                f = as_float(full_imm)
-                                if f is not None:
-                                    cmt += f" | float: {f}"
-
-                                ida_bytes.set_cmt(ea, cmt, False)
-                                ida_bytes.set_cmt(ea2, cmt, False)
-
-                            processed += 1
-
-            ea = idc.next_head(ea, fn.end_ea)
-
-    return processed
-
 class VitaElf:
-    class _PostAnalysisHook(ida_idp.IDB_Hooks):
-        def __init__(self, owner):
-            super().__init__()
-            self.owner = owner
-
-        def auto_empty_finally(self):
-            print("6) Annotating MOVW/MOVT pairs")
-            annotate_movw_movt_pairs()
-            self.unhook()
-            self.owner._post_hook = None
-            return 0
-
     def __init__(self, fd):
-        self._post_hook = None
         self.fd = fd
         self.nid_to_name = dict()
         self.proto = []
@@ -521,10 +416,6 @@ class VitaElf:
         if modinfo.stop_entry != 0xFFFFFFFF:
             ea = ida_loader.get_fileregion_ea(self.phdr_modinfo.p_offset + modinfo.stop_entry)
             ida_entry.add_entry(ea, ea, idc.get_func_name(ea), 1)
-
-        print("5) Waiting for IDA to analyze the program")
-        self._post_hook = self._PostAnalysisHook(self)
-        self._post_hook.hook()
 
 def load_file(fd, neflags, format):
     e = VitaElf(fd)
