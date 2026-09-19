@@ -1,4 +1,4 @@
-// Generated on: 2026-08-21T13:44:06.079190+02:00
+// Generated on: 2026-09-19T14:36:51.774887+02:00
 int module_start(SceSize arglen, const void *argp);
 int module_stop(SceSize arglen, const void *argp);
 int module_exit(SceSize arglen, const void *argp);
@@ -1046,6 +1046,14 @@ void pss_code_mem_unlock(void);
 int pss_crypto_close(ScePssCryptoHandle *handle);
 int pss_crypto_open(ScePssCryptoHandle *handle, char *path);
 char *pss_crypto_read(ScePssCryptoHandle *handle, int *mode);
+int sceMp4RecAddAudioSample(SceMp4RecRecorder *rec, void *buffer, int size);
+int sceMp4RecAddVideoSample(SceMp4RecRecorder *rec, void *buffer, int size);
+int sceMp4RecCreateRecorder(SceMp4RecRecorder *rec);
+int sceMp4RecCsc(SceMp4RecFrame *dst, SceMp4RecFrame *src);
+int sceMp4RecDeleteRecorder(SceMp4RecRecorder *rec);
+int sceMp4RecInit(SceMp4RecRecorder *rec, SceMp4RecInitParam *params);
+int sceMp4RecQueryPhysicalMemSize(SceMp4RecRecorder *rec, int mode, uint32_t *encoder_size, uint32_t *av_size);
+int sceMp4RecTerm(SceMp4RecRecorder *rec, SceMp4RecTermParam *params);
 int sceNetCtlAdhocDisconnect();
 int sceNetCtlAdhocGetInAddr(SceNetInAddr *inaddr);
 int sceNetCtlAdhocGetPeerList(unsigned int *buflen, void *buf);
@@ -1496,6 +1504,10 @@ int _sceNpDrmGetRifNameForInstall(char *rif_name, const SceNpDrmLicense *rif_dat
 int _sceNpDrmPackageCheck(const void *buffer, SceSize size, int zero, unsigned int identifier);
 int _sceNpDrmPackageDecrypt(void * buffer, SceSize size, _sceNpDrmPackageDecrypt_opt * opt);
 int scePsmDrmGetRifKey(const ScePsmDrmLicense *license_buf, ScePsmDrmKeySet *keydata, int* flags, ScePsmDrmExpireTime* exp_time);
+int sceNpInit(const SceNpCommunicationConfig *config, SceNpOptParam *opt);
+int sceNpManagerGetAccountRegion(SceNpCountryCode *country_code, int *language_code);
+int sceNpManagerGetNpId(SceNpId *np_id);
+void sceNpTerm();
 void scePafCreateHeap(ScePafHeapContext *context, void *membase, SceSize size, const char *name, ScePafHeapOpt *opt);
 void scePafDeleteHeap(ScePafHeapContext *context);
 void scePafFreeWithContext(ScePafHeapContext *context, void *ptr);

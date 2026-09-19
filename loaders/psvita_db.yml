@@ -1,4 +1,4 @@
-# Generated on: 2026-08-21T13:44:06.079190+02:00
+# Generated on: 2026-09-19T14:36:51.774887+02:00
 version: 2
 firmware: 3.60
 modules:
@@ -9882,6 +9882,7 @@ modules:
           ksceKernelGetUIDHeapClass: 0x4CCA935D
           ksceKernelGetUIDMemBlockClass: 0xAF729575
           ksceKernelNameHeapGetInfo: 0xE443253B
+          ksceKernelReallocHeapMemory: 0xFDC0EA11
           ksceKernelUIDEntryHeapGetInfo: 0x686AA15C
       SceSysrootForDriver:
         kernel: true
