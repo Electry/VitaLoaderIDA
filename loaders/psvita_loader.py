@@ -149,22 +149,36 @@ class SceKernelLibraryEntryTablePrx2Arm:
         return sid
 
 class SceKernelLibraryStubTablePrx2Arm:
-    SIZE = 0x34
+    PRX2ARM_SIZE = 0x34      # sceKernelLibraryStubTable_prx2arm
+    PRX2ARM_NEW_SIZE = 0x24  # sceKernelLibraryStubTable_prx2arm_new
+    SUPPORTED_SIZES = (PRX2ARM_NEW_SIZE, PRX2ARM_SIZE)
 
     def __init__(self, data):
         self.structsize      = u8(data, 0x00)
-        if self.structsize != self.SIZE:
-            raise ValueError(f"Expected PRX2 structsize of {self.SIZE:#x} instead of {self.structsize:#x}")
+        if self.structsize not in self.SUPPORTED_SIZES:
+            expected = ", ".join(f"{size:#x}" for size in self.SUPPORTED_SIZES)
+            raise ValueError(f"Expected PRX2 import structsize of {expected} instead of {self.structsize:#x}")
+        if len(data) < self.structsize:
+            raise ValueError(f"Truncated PRX2 import structure: expected {self.structsize:#x} bytes, got {len(data):#x}")
         self.nfunc           = u16(data, 0x06)
-        self.libname_nid     = u32(data, 0x10)
-        self.libname         = u32(data, 0x14)
         self.libname_str     = "unk"
-        self.nidtable        = u32(data, 0x1C) # func_nidtable
-        self.addtable        = u32(data, 0x20) # func_table
+        if self.structsize == self.PRX2ARM_NEW_SIZE:
+            self.libname_nid = u32(data, 0x0C)
+            self.libname     = u32(data, 0x10)
+            self.nidtable    = u32(data, 0x14) # func_nidtable
+            self.addtable    = u32(data, 0x18) # func_table
+        else:
+            self.libname_nid = u32(data, 0x10)
+            self.libname     = u32(data, 0x14)
+            self.nidtable    = u32(data, 0x1C) # func_nidtable
+            self.addtable    = u32(data, 0x20) # func_table
 
-    @staticmethod
-    def _find_or_create_struct():
-        name = "sce_kernel_library_stub_table_prx2arm_t"
+    def _find_or_create_struct(self):
+        if self.structsize == self.PRX2ARM_NEW_SIZE:
+            name = "sce_kernel_library_stub_table_prx2arm_new_t"
+        else:
+            name = "sce_kernel_library_stub_table_prx2arm_t"
+
         sid = idc.get_struc_id(name)
         if sid != idc.BADADDR:
             return sid  # already exists
@@ -177,6 +191,16 @@ class SceKernelLibraryStubTablePrx2Arm:
         idc.add_struc_member(sid, "nfunc",          -1, idc.FF_WORD,  -1, 2)
         idc.add_struc_member(sid, "nvar",           -1, idc.FF_WORD,  -1, 2)
         idc.add_struc_member(sid, "ntlsvar",        -1, idc.FF_WORD,  -1, 2)
+
+        if self.structsize == self.PRX2ARM_NEW_SIZE:
+            idc.add_struc_member(sid, "libname_nid",   -1, idc.FF_DWORD, -1, 4)
+            idc.add_struc_member(sid, "libname",       -1, idc.FF_DWORD, -1, 4)
+            idc.add_struc_member(sid, "func_nidtable", -1, idc.FF_DWORD, -1, 4)
+            idc.add_struc_member(sid, "func_table",    -1, idc.FF_DWORD, -1, 4)
+            idc.add_struc_member(sid, "var_nidtable",  -1, idc.FF_DWORD, -1, 4)
+            idc.add_struc_member(sid, "var_table",     -1, idc.FF_DWORD, -1, 4)
+            return sid
+
         idc.add_struc_member(sid, "reserved2",      -1, idc.FF_DWORD, -1, 4)
         idc.add_struc_member(sid, "libname_nid",    -1, idc.FF_DWORD, -1, 4)
         idc.add_struc_member(sid, "libname",        -1, idc.FF_DWORD, -1, 4)
@@ -289,6 +313,9 @@ class VitaElf:
 
     def add_nid_cmt(self, ea, cmt):
         func = ida_funcs.get_func(ea & ~1)
+        if func is None:
+            return
+
         name = idc.get_func_name(func.start_ea)
         self.comments[name].append(cmt)
         ida_funcs.set_func_cmt(func, " aka ".join(self.comments[name]), False)
@@ -301,7 +328,22 @@ class VitaElf:
             impexp_addr = ida_loader.get_fileregion_ea(impexp_foffset)
 
             self.fd.seek(impexp_foffset)
-            impexp = cls(self.fd.read(cls.SIZE))
+            size_data = self.fd.read(1)
+            if len(size_data) != 1:
+                raise ValueError(f"Truncated import/export table at file offset {impexp_foffset:#x}")
+
+            structsize = u8(size_data)
+            remaining = end - cur
+            if structsize == 0 or structsize > remaining:
+                raise ValueError(f"Invalid import/export structsize {structsize:#x} with {remaining:#x} bytes remaining")
+
+            self.fd.seek(impexp_foffset)
+            data = self.fd.read(structsize)
+            if len(data) != structsize:
+                raise ValueError(f"Truncated import/export structure: expected {structsize:#x} bytes, got {len(data):#x}")
+
+            impexp = cls(data)
+
             if impexp.libname:
                 libname_foffset = self.phdr_modinfo.p_offset + impexp.libname - self.phdr_modinfo.p_vaddr
                 self.fd.seek(libname_foffset)
@@ -315,9 +357,9 @@ class VitaElf:
                 data = self.fd.read(256)
                 impexp.libname_str = c_str(data)
 
-            tid = cls._find_or_create_struct()
+            tid = impexp._find_or_create_struct()
             if tid != idc.BADADDR:
-                apply_struct(impexp_addr, cls.SIZE, tid)
+                apply_struct(impexp_addr, impexp.structsize, tid)
 
             arr.append(impexp)
             cur += impexp.structsize
