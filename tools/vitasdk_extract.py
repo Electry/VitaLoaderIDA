@@ -162,7 +162,6 @@ def sanitize_headers(text):
     for pattern, repl in replacements:
         text = re.sub(pattern, repl, text)
 
-    text = re.sub(r"\n\s*\n+", "\n\n", text)
     return text
 
 def clean_chunk(x):
@@ -172,7 +171,6 @@ def clean_chunk(x):
     x = re.sub(r"\s*\)", ")", x)
     x = re.sub(r"\s*,\s*", ", ", x)
     x = re.sub(r"\s+;", ";", x)
-    x = re.sub(r"\s*;\s*$", ";", x)
     return x
 
 def normalize_decl(s):
@@ -181,7 +179,7 @@ def normalize_decl(s):
         return s
 
     if "{" not in s and "}" not in s:
-        return clean_chunk(" ".join(line.strip() for line in s.splitlines() if line.strip()))
+        return clean_chunk(s)
 
     s = re.sub(r"([{}])", r"\n\1\n", s)
     parts = [x.strip() for x in s.splitlines() if x.strip()]
@@ -216,7 +214,7 @@ def normalize_decl(s):
         out.append("  " * indent + clean_chunk(part))
         i += 1
 
-    return "\n".join(out)
+    return "\n".join(line.rstrip() for line in out)
 
 def split_declarations(headers):
     decls = []
