@@ -9,18 +9,18 @@ Originally loosely based on xyz's [vitadump](https://github.com/xyzz/vitadump).
 
 ### Requirements
 
-- IDA Professional 9.1
+- IDA Professional 9.1 - 9.3
   - other 9.x versions might work depending on how much has the python API changed (untested)
 - IDAPython plugin for IDA
 
 ### Usage
 
-- Copy following files to your `loaders/` directory where IDA is installed (usually `C:\Program Files\IDA Professional 9.1\loaders`):
+- Copy following files to your `loaders/` directory where IDA is installed (usually `C:\Program Files\IDA Professional 9.3\loaders`):
   - `psvita_loader.py`
   - `psvita_functions.h`
   - `psvita_types.h`
   - `psvita_db.yml`
-- *(Optional)* Copy following files to your `plugins/` directory where IDA is installed (usually `C:\Program Files\IDA Professional 9.1\plugins`):
+- *(Optional)* Copy following files to your `plugins/` directory where IDA is installed (usually `C:\Program Files\IDA Professional 9.3\plugins`):
   - `annotate_movw_movt_pairs.py`
 - Open any `eboot.bin.elf` within IDA and select the `psvita_loader.py` loader from the list
 - *(Optional)* To run the `annotate_movw_movt_pairs.py` plugin, click `Edit -> Plugins -> Annotate MOVW/MOVT pairs`
